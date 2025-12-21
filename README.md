@@ -110,6 +110,6 @@ This approach prevents unnecessary MQTT traffic and saves ESP32 bandwidth.
 
 ### How To Run (backend server)
 
-cd backend
-npm install
+cd backend <br>
+npm install <br>
 node index.js
