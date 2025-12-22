@@ -1,0 +1,241 @@
+{
+  "name": "Spotify Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "8d71ab12-1607-4c2a-95d5-4f583c97278c",
+              "leftValue": "={{ $json.now }}",
+              "rightValue": "={{ $json.prev }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        400,
+        208
+      ],
+      "id": "cd0ed3f2-280f-4361-b127-5112935e613d",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"song_id\": \"\", \n  \"title\": \"\",\n  \"artist\": \"\",\n  \"album\": \"\",\n  \"is_playing\": false,\n  \"progress\": 0, \n  \"duration\": 0,\n  \"cover_url\": \"\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        624,
+        112
+      ],
+      "id": "75670b2b-d65e-4c75-bad6-3b246331a30c",
+      "name": "Return empty if data null"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"link\": \"{{ $json.now }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        688,
+        336
+      ],
+      "id": "fe7d9b20-cf02-45fc-ac19-260e58de1f80",
+      "name": "Return some data if not null"
+    },
+    {
+      "parameters": {
+        "operation": "currentlyPlaying"
+      },
+      "type": "n8n-nodes-base.spotify",
+      "typeVersion": 1,
+      "position": [
+        176,
+        208
+      ],
+      "id": "a0a08b78-8875-43dd-b05a-60833859dc6d",
+      "name": "Get Current Song",
+      "credentials": {
+        "spotifyOAuth2Api": {
+          "id": "XbdRaQ4UohkWpWAE",
+          "name": "Spotify account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "topic": "spotify/nowplaying",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mqtt",
+      "typeVersion": 1,
+      "position": [
+        864,
+        224
+      ],
+      "id": "70e8f9e5-b9c5-4c3d-ae95-dbaaca44bf4a",
+      "name": "Publish to spotify/nowplaying",
+      "credentials": {
+        "mqtt": {
+          "id": "j1x6qim4KGl5y0Mm",
+          "name": "MQTT account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "For ESP32 round display spotify",
+        "height": 560,
+        "width": 1248
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -64,
+        32
+      ],
+      "typeVersion": 1,
+      "id": "b4a4377a-e2bc-4130-b6ee-6ec1c8937f5e",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "seconds",
+              "secondsInterval": 3
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        208
+      ],
+      "id": "e32e2709-0358-4fc0-bba1-0aac180b25b1",
+      "name": "Trigger every 3 seconds"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the static data of the node\nconst nodeStaticData = $getWorkflowStaticData('global');\n\n// Access its data\nconst lastExecution = nodeStaticData.songName;\n\n// Update its data\nnodeStaticData.songName = $input.first().json.item.album.images[0].url;\n// Delete data\n// delete nodeStaticData.lastExecution;\n\nreturn [{\"now\":nodeStaticData.songName, \"prev\":lastExecution}]"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        368
+      ],
+      "id": "bdd5ab80-add4-46d5-9395-5996915d71ff",
+      "name": "Code in JavaScript1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Return empty if data null",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return some data if not null",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Return empty if data null": {
+      "main": [
+        [
+          {
+            "node": "Publish to spotify/nowplaying",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Return some data if not null": {
+      "main": [
+        [
+          {
+            "node": "Publish to spotify/nowplaying",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Current Song": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Trigger every 3 seconds": {
+      "main": [
+        [
+          {
+            "node": "Get Current Song",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "",
+  "meta": {
+    "instanceId": "481c77a9eb41e401bc68e73d6d35a4337de9b33e073cfc1561c7b33e7fea8cfd"
+  },
+  "tags": []
+}
