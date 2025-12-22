@@ -1,4 +1,7 @@
-# ESP32 Spotify Now Playing Display
+# ESP32 Spotify Album Display
+
+![S__10002456](https://github.com/user-attachments/assets/178b5688-6496-4fc4-970e-47bd2f58376c)
+
 
 A real-time **Spotify Now Playing album cover display** using **ESP32**, **MQTT**, and a **TFT screen**.
 
