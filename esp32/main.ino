@@ -118,11 +118,10 @@ void coverTask(void *param) {
 }
 
 bool downloadCover(String url){
-  
-    // Serial.println("Downloading cover !");
+    Serial.println("Downloading cover !");
     HTTPClient http;
     // http.setTimeout(8000);
-    http.begin("http://192.168.1.12:3000/album?url=" + url);
+    http.begin("https://compress.hansprojects.com/album?url=" + url);
 
     int code = http.GET();
     if (code != 200)
@@ -132,7 +131,7 @@ bool downloadCover(String url){
         return false;
     }
 
-    // Serial.println("GET method done !");
+    Serial.println("GET method done !");
 
     WiFiClient *stream = http.getStreamPtr();
     File f = LittleFS.open("/cover", FILE_WRITE);
@@ -143,18 +142,18 @@ bool downloadCover(String url){
         return false;
     }
 
-    // Serial.println("FS Done !");
+    Serial.println("FS Done !");
 
     uint8_t buf[1024];
     size_t total = 0;
 
-    while (http.connected() || stream->available()) {
+    while (true) {
         int len = stream->readBytes(buf, sizeof(buf));
-        if (len > 0) {
-            f.write(buf, len);
-            total += len;
-        }
-        vTaskDelay(1);
+        if (len <= 0) break;
+
+        f.write(buf, len);
+        total += len;
+        Serial.println(len);
     }
 
     f.close();
@@ -166,14 +165,14 @@ bool downloadCover(String url){
 
 bool drawCover()
 {
-  // Serial.println("Begin Drawing !");
+  Serial.println("Begin Drawing !");
   File f = LittleFS.open("/cover", "r");
   if (!f)
   {
       Serial.println("Failed to open JPG");
       return false;
   }
-  // Serial.println("Done init LittleFS");
+  Serial.println("Done init LittleFS");
   size_t size = f.size();
   uint8_t *buf = (uint8_t *)malloc(size);
   if (!buf)
@@ -183,7 +182,7 @@ bool drawCover()
       return false;
   }
 
-  // Serial.println("Done Malloc !");
+  Serial.println("Done Malloc !");
 
   f.read(buf, size);
   f.close();
@@ -244,7 +243,7 @@ void setup() {
     NULL,
     1,
     NULL,
-    1   // pindah ke core 1
+    1 
   );
 
 }
